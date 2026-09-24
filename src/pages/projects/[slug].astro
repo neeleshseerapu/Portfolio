@@ -1,13 +1,13 @@
 ---
-import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { render, type CollectionEntry } from 'astro:content';
 import { site } from '@/data/site';
+import { getProjects } from '@/lib/content';
 import { graph, person, sourceCode } from '@/lib/jsonld';
 import Base from '@/layouts/Base.astro';
 import FeaturedProject from '@/components/FeaturedProject.astro';
 
 export async function getStaticPaths() {
-  const projects = await getCollection('projects');
-  return projects.map((project) => ({ params: { slug: project.data.slug }, props: { project } }));
+  return (await getProjects()).map((project) => ({ params: { slug: project.data.slug }, props: { project } }));
 }
 
 const { project } = Astro.props as { project: CollectionEntry<'projects'> };

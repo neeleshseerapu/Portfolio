@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
 import { site } from '@/data/site';
+import { getExperience, getProjects } from '@/lib/content';
 
 export const GET: APIRoute = async ({ site: base }) => {
   const url = (path: string) => (base ? new URL(path, base).href : path);
-  const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+  const projects = await getProjects();
+  const experience = await getExperience();
   const { resume, github, linkedin, email } = site.links;
   const links = [
     ['Resume (PDF)', resume && url(resume)],
@@ -18,11 +19,13 @@ export const GET: APIRoute = async ({ site: base }) => {
     '',
     `> ${site.tagline}`,
     '',
-    `${site.name} studies computer science at ${site.school} (${site.schoolShort}) and works as ${site.role} at ${site.company}.`,
-    '',
     '## Projects',
     '',
     ...projects.map(({ data }) => `- [${data.title}](${url(`/projects/${data.slug}/`)}): ${data.oneLiner}`),
+    '',
+    '## Experience',
+    '',
+    ...experience.map(({ data }) => `- ${data.role}, ${data.company} (${data.start} to ${data.end})`),
     '',
     '## Links',
     '',
