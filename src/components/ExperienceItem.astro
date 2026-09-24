@@ -1,0 +1,15 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+
+interface Props {
+  item: CollectionEntry<'experience'>;
+}
+const { item } = Astro.props;
+const { role, company, start, end, location } = item.data;
+const { Content } = await render(item);
+---
+<article>
+  <h3>{role}, {company}</h3>
+  <p class="muted">{start} – {end}{location && ` · ${location}`}</p>
+  <Content />
+</article>

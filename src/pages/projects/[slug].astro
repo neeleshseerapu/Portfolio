@@ -1,0 +1,24 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { site } from '@/data/site';
+import { graph, person, sourceCode } from '@/lib/jsonld';
+import Base from '@/layouts/Base.astro';
+import FeaturedProject from '@/components/FeaturedProject.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({ params: { slug: project.data.slug }, props: { project } }));
+}
+
+const { project } = Astro.props as { project: CollectionEntry<'projects'> };
+const { Content } = await render(project);
+const jsonLd = graph(person(Astro.site), sourceCode(project, Astro.site));
+---
+<Base title={`${project.data.title} · ${site.name}`} description={project.data.oneLiner} jsonLd={jsonLd}>
+  <nav aria-label="Breadcrumb"><a href="/">← {site.name}</a></nav>
+  <FeaturedProject project={project} as="h1" />
+  <section aria-labelledby="writeup">
+    <h2 id="writeup">Write-up</h2>
+    <Content />
+  </section>
+</Base>

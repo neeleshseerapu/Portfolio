@@ -1,0 +1,33 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  as?: 'h1' | 'h3';
+}
+const { project, as: Heading = 'h3' } = Astro.props;
+const { title, slug, oneLiner, stack, result, repoUrl, demoUrl, videoUrl, logo } = project.data;
+const links = [
+  ['Code', repoUrl],
+  ['Live demo', demoUrl],
+  ['Video', videoUrl?.startsWith('http') && videoUrl],
+].filter(([, href]) => href);
+---
+<article>
+  <div class="title">
+    {logo && <img src={logo} alt="" width="40" height="40" />}
+    <Heading>{Heading === 'h1' ? title : <a href={`/projects/${slug}/`}>{title}</a>}</Heading>
+  </div>
+  <slot />
+  <p>{oneLiner}</p>
+  {result && <p><strong>Result:</strong> {result}</p>}
+  <p class="muted">Stack: {stack.join(', ')}</p>
+  <ul class="links">
+    {links.map(([label, href]) => <li><a href={href}>{label}</a></li>)}
+  </ul>
+</article>
+
+<style>
+  .title { display: flex; align-items: center; gap: 0.75rem; }
+  .title h1, .title h3 { margin: 0; }
+</style>

@@ -1,0 +1,12 @@
+---
+import { site } from '@/data/site';
+import ContactLinks from './ContactLinks.astro';
+---
+<footer>
+  <p class="muted">{site.name}</p>
+  <ContactLinks />
+</footer>
+
+<style>
+  footer { max-width: 44rem; margin-top: 3rem; border-top: 1px solid var(--line); }
+</style>

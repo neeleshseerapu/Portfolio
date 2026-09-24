@@ -1,0 +1,31 @@
+---
+import { getCollection } from 'astro:content';
+import { site } from '@/data/site';
+import { graph, person, sourceCode } from '@/lib/jsonld';
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import FeaturedProject from '@/components/FeaturedProject.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import ExperienceItem from '@/components/ExperienceItem.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const featured = projects.filter((p) => p.data.featured);
+const others = projects.filter((p) => !p.data.featured);
+const experience = (await getCollection('experience')).sort((a, b) => a.data.order - b.data.order);
+const jsonLd = graph(person(Astro.site), ...projects.map((p) => sourceCode(p, Astro.site)));
+---
+<Base title={`${site.name}: ${site.role} at ${site.company}`} description={site.tagline} jsonLd={jsonLd}>
+  <Header />
+  <section aria-labelledby="featured">
+    <h2 id="featured">Featured project</h2>
+    {featured.map((p) => <FeaturedProject project={p} />)}
+  </section>
+  <section aria-labelledby="projects">
+    <h2 id="projects">Other projects</h2>
+    {others.map((p) => <ProjectCard project={p} />)}
+  </section>
+  <section aria-labelledby="experience">
+    <h2 id="experience">Experience</h2>
+    {experience.map((item) => <ExperienceItem item={item} />)}
+  </section>
+</Base>

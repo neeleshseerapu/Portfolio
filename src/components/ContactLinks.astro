@@ -1,0 +1,14 @@
+---
+import { site } from '@/data/site';
+
+const { resume, github, linkedin, email } = site.links;
+const links = [
+  ['Resume (PDF)', resume],
+  ['GitHub', github],
+  ['LinkedIn', linkedin],
+  [email, email && `mailto:${email}`],
+].filter(([, href]) => href);
+---
+<ul class="links">
+  {links.map(([label, href]) => <li><a href={href}>{label}</a></li>)}
+</ul>
