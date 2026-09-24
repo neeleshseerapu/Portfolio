@@ -15,6 +15,7 @@ All content lives in data files. Components never need to change.
 - **Change the featured project:** set `featured: true` on the project(s) to feature and `false` on the rest. Any number works, including none.
 - **Reorder:** lower `order` comes first (projects and experience).
 - **Add a role:** copy a file in `src/content/experience/`.
+- **Line breaks:** write one sentence per line in `.md` bodies. On wide screens each sentence shows on its own line; on phones they flow together. Frontmatter strings (`tagline`, `oneLiner`, `result`) are split into sentences automatically.
 - **Media:** put files in `public/` and reference them from the root, e.g. `logo: /logos/name.svg` or `videoUrl: /demos/name.mp4`. A `.gif` shows as an image, other local files as a video, and an `https://` link as a "Video" link.
 
 `npm run build` checks every file against the schema in `src/content.config.ts` and names the file and field if something is missing or malformed.

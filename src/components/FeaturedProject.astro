@@ -10,9 +10,9 @@ const { project, as } = Astro.props;
 const { title, videoUrl } = project.data;
 const local = videoUrl?.startsWith('/');
 ---
-<ProjectCard project={project} as={as}>
-  {local && videoUrl.endsWith('.gif') && <img src={videoUrl} alt={`Demo of ${title}`} />}
+<ProjectCard project={project} as={as} featured>
+  {local && videoUrl.endsWith('.gif') && <img class="media" src={videoUrl} alt={`Demo of ${title}`} />}
   {local && !videoUrl.endsWith('.gif') && (
-    <video src={videoUrl} controls muted playsinline preload="metadata" aria-label={`Demo video of ${title}`}></video>
+    <video class="media" src={videoUrl} controls muted playsinline preload="metadata" aria-label={`Demo video of ${title}`}></video>
   )}
 </ProjectCard>

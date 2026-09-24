@@ -1,9 +1,76 @@
 ---
 import { site } from '@/data/site';
+import { lines } from '@/lib/content';
 import ContactLinks from './ContactLinks.astro';
 ---
-<header>
-  <h1>{site.name}</h1>
-  <p>{site.tagline}</p>
-  <nav aria-label="Contact"><ContactLinks /></nav>
+<header id="intro">
+  <p class="prompt" aria-hidden="true"><span data-type="70">whoami</span></p>
+  <h1 data-type="40">{site.name}</h1>
+  <p class="tagline lines" data-type="6">{lines(site.tagline)}</p>
+  <nav aria-label="Contact" data-type="15"><ContactLinks /></nav>
 </header>
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    if (!root.classList.contains('intro')) return;
+    let done = false;
+    const jobs = [];
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    cursor.setAttribute('aria-hidden', 'true');
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      for (const j of jobs) {
+        j.node.data = j.text;
+        j.rest.replaceWith(j.node);
+        j.typed.remove();
+      }
+      cursor.remove();
+      root.classList.remove('intro', 'typing');
+    };
+
+    try {
+      for (const el of document.querySelectorAll('#intro [data-type]')) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) if (walker.currentNode.data.trim()) nodes.push(walker.currentNode);
+        for (const node of nodes) {
+          const typed = document.createTextNode('');
+          const rest = document.createElement('span');
+          rest.className = 'untyped';
+          node.before(typed);
+          typed.after(rest);
+          rest.append(node);
+          jobs.push({ el, node, typed, rest, text: node.data, delay: Number(el.dataset.type) });
+        }
+      }
+      root.classList.add('typing');
+    } catch {
+      finish();
+      return;
+    }
+
+    addEventListener('keydown', finish, { once: true });
+    addEventListener('pointerdown', finish, { once: true });
+    setTimeout(finish, 8000);
+
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    (async () => {
+      await sleep(300);
+      for (const [i, j] of jobs.entries()) {
+        j.rest.before(cursor);
+        for (let n = 1; n <= j.text.length; n++) {
+          if (done) return;
+          j.typed.data = j.text.slice(0, n);
+          j.node.data = j.text.slice(n);
+          await sleep(j.delay);
+        }
+        if (jobs[i + 1]?.el !== j.el) await sleep(i === 0 ? 350 : 150);
+      }
+      finish();
+    })().catch(finish);
+  })();
+</script>

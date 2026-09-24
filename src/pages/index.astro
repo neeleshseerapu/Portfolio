@@ -14,23 +14,23 @@ const others = projects.filter((p) => !p.data.featured);
 const experience = await getExperience();
 const jsonLd = graph(person(Astro.site), ...projects.map((p) => sourceCode(p, Astro.site)));
 ---
-<Base title={site.title} description={site.tagline} jsonLd={jsonLd}>
+<Base title={site.title} description={site.tagline} jsonLd={jsonLd} intro>
   <Header />
   {featured.length > 0 && (
     <section aria-labelledby="featured">
-      <h2 id="featured">{featured.length > 1 ? 'Featured projects' : 'Featured project'}</h2>
+      <h2 id="featured" data-cmd="cat" data-ext=".md">featured</h2>
       {featured.map((p) => <FeaturedProject project={p} />)}
     </section>
   )}
   {others.length > 0 && (
     <section aria-labelledby="projects">
-      <h2 id="projects">{featured.length > 0 ? 'Other projects' : 'Projects'}</h2>
-      {others.map((p) => <ProjectCard project={p} />)}
+      <h2 id="projects" data-cmd="ls" data-ext="/">projects</h2>
+      <div class="grid">{others.map((p) => <ProjectCard project={p} />)}</div>
     </section>
   )}
   {experience.length > 0 && (
     <section aria-labelledby="experience">
-      <h2 id="experience">Experience</h2>
+      <h2 id="experience" data-cmd="cat" data-ext=".log">experience</h2>
       {experience.map((item) => <ExperienceItem item={item} />)}
     </section>
   )}

@@ -1,11 +1,13 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { lines } from '@/lib/content';
 
 interface Props {
   project: CollectionEntry<'projects'>;
   as?: 'h1' | 'h3';
+  featured?: boolean;
 }
-const { project, as: Heading = 'h3' } = Astro.props;
+const { project, as: Heading = 'h3', featured = false } = Astro.props;
 const { title, slug, oneLiner, stack, result, repoUrl, demoUrl, videoUrl, logo } = project.data;
 const links = [
   ['Code', repoUrl],
@@ -13,14 +15,14 @@ const links = [
   ['Video', videoUrl?.startsWith('http') && videoUrl],
 ].filter(([, href]) => href);
 ---
-<article>
+<article class:list={['card', { featured }]}>
   <div class="title">
-    {logo && <img src={logo} alt="" width="40" height="40" />}
+    {logo && <img src={logo} alt="" />}
     <Heading>{Heading === 'h1' ? title : <a href={`/projects/${slug}/`}>{title}</a>}</Heading>
   </div>
   <slot />
-  <p>{oneLiner}</p>
-  {result && <p><strong>Result:</strong> {result}</p>}
+  <p class="lines">{lines(oneLiner)}</p>
+  {result && <p class="ok lines"><strong>Result:</strong> {lines(result)}</p>}
   <p class="muted">Stack: {stack.join(', ')}</p>
   <ul class="links">
     {links.map(([label, href]) => <li><a href={href}>{label}</a></li>)}
@@ -28,6 +30,23 @@ const links = [
 </article>
 
 <style>
-  .title { display: flex; align-items: center; gap: 0.75rem; }
-  .title h1, .title h3 { margin: 0; }
+  .title { display: flex; align-items: center; gap: 0.6rem; }
+  .title img { height: 1.25em; width: auto; border-radius: 22%; flex: none; }
+  .featured .title img { height: 2.25em; }
+  .title h1, .title h3 { margin: 0; color: var(--accent); text-shadow: var(--glow-accent); }
+  .title a { color: inherit; }
+  .card { position: relative; }
+  .title a::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
+  .title a:focus-visible { outline: none; }
+  .card:has(.title a:focus-visible) { outline: 2px solid var(--ok); outline-offset: 3px; }
+  .links a, .card :global(.media) { position: relative; z-index: 1; }
+  .featured { padding: clamp(1.25rem, 3vw, 2rem); }
+  .featured + .featured { margin-top: 1rem; }
+  .featured .title h3 { font-size: 1.4em; }
+  .featured .title h3::before { content: '> '; content: '> ' / ''; }
+  .featured :global(.media) { display: block; margin: 1rem 0; border-radius: 6px; border: 1px solid var(--line); }
+  @media (min-width: 60rem) {
+    .featured:has(:global(.media)) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); column-gap: 2rem; }
+    .featured :global(.media) { grid-column: 2; grid-row: 1 / span 6; margin: 0; }
+  }
 </style>

@@ -1,4 +1,5 @@
 ---
+import { Font } from 'astro:assets';
 import { site } from '@/data/site';
 import Footer from '@/components/Footer.astro';
 
@@ -6,8 +7,9 @@ interface Props {
   title: string;
   description: string;
   jsonLd: string;
+  intro?: boolean;
 }
-const { title, description, jsonLd } = Astro.props;
+const { title, description, jsonLd, intro = false } = Astro.props;
 const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
 ---
 <!doctype html>
@@ -15,6 +17,7 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1c1819" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content={site.name} />
@@ -28,7 +31,16 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+    <Font cssVariable="--font-mono" preload />
     <script type="application/ld+json" set:html={jsonLd} />
+    <script is:inline define:vars={{ intro }}>
+      try {
+        if (intro && !sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          document.documentElement.classList.add('intro');
+        }
+        sessionStorage.setItem('intro', '1');
+      } catch {}
+    </script>
   </head>
   <body>
     <main>
@@ -40,38 +52,108 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
 
 <style is:global>
   :root {
-    color-scheme: light dark;
-    --fg: #1a1a1a;
-    --muted: #555;
-    --bg: #fff;
-    --line: #ddd;
-    --link: #0b57d0;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --fg: #eee;
-      --muted: #aaa;
-      --bg: #111;
-      --line: #333;
-      --link: #8ab4f8;
-    }
+    color-scheme: dark;
+    --bg: #1c1819;
+    --card: #25201f;
+    --line: #3d3533;
+    --fg: #ebdfc9;
+    --muted: #ab9f8e;
+    --accent: #c46bf5;
+    --link: #deb4e6;
+    --ok: #e3ef5b;
+    --glow-accent: 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+    --glow-ok: 0 0 3px color-mix(in srgb, var(--ok) 30%, transparent);
+    --radius: 10px;
   }
   * { box-sizing: border-box; }
+  html { background: var(--bg); }
   body {
     margin: 0 auto;
-    max-width: 44rem;
-    padding: 1.5rem 1rem;
-    font: 1rem/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    max-width: 72rem;
+    padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 2.5rem);
+    font: clamp(0.875rem, 0.8rem + 0.35vw, 1rem) / 1.65 var(--font-mono), monospace;
     color: var(--fg);
     background: var(--bg);
     overflow-wrap: anywhere;
   }
-  a { color: var(--link); }
-  a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px);
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+  p { max-width: 72ch; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { color: var(--ok); text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; border-radius: 2px; }
   img, video { max-width: 100%; height: auto; }
   pre { overflow-x: auto; }
-  section { margin-top: 2.5rem; }
-  article { border-top: 1px solid var(--line); padding: 1rem 0; }
+
+  h1 { font-size: clamp(1.75rem, 1.2rem + 3vw, 3rem); line-height: 1.15; margin: 0.25rem 0 0.75rem; }
+  h2 { font-size: 1em; font-weight: 400; color: var(--ok); text-shadow: var(--glow-ok); margin: 0 0 1rem; }
+  h3 { font-size: 1.1em; margin: 0; }
+  section { margin-top: clamp(1.75rem, 4vw, 2.75rem); }
+
+  .prompt { margin: 0; }
+  .prompt::before, h2[data-cmd]::before {
+    color: var(--accent);
+    text-shadow: var(--glow-accent);
+  }
+  .prompt::before { content: '~/neelesh $ '; content: '~/neelesh $ ' / ''; }
+  h2[data-cmd]::before {
+    content: '~/neelesh $ ' attr(data-cmd) ' ';
+    content: '~/neelesh $ ' attr(data-cmd) ' ' / '';
+  }
+  h2[data-ext]::after { content: attr(data-ext); content: attr(data-ext) / ''; }
+
+  .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 0; padding: 0; list-style: none; text-transform: lowercase; }
+  .links a::before { content: '['; content: '[' / ''; }
+  .links a::after { content: ']'; content: ']' / ''; }
+
+  @media (min-width: 48rem) { p.lines, .lines p { white-space: pre-line; max-width: 100ch; } }
   .muted { color: var(--muted); }
-  .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; padding: 0; list-style: none; }
+  .ok { color: var(--ok); text-shadow: var(--glow-ok); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+  .card p { margin: 0.5rem 0; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.15em;
+    margin-right: -0.6em;
+    vertical-align: text-bottom;
+    background: var(--ok);
+    box-shadow: 0 0 4px color-mix(in srgb, var(--ok) 50%, transparent);
+  }
+
+  .intro:not(.typing) #intro { visibility: hidden; }
+  .intro main > :not(#intro), .intro footer { opacity: 0; }
+  main > *, footer { transition: opacity 0.6s ease; }
+  .untyped, .untyped * { color: transparent !important; text-shadow: none !important; }
+  .typing .links a:has(.untyped:not(:empty))::before,
+  .typing .links a:has(.untyped:not(:empty))::after { color: transparent; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :root:not(.typing) .cursor { animation: blink 1.1s steps(1) infinite; }
+    @supports (animation-timeline: view()) {
+      .card, .log { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 35%; }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    main > *, footer, .card { transition: none; }
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  @media print { body::after { display: none; } }
 </style>
