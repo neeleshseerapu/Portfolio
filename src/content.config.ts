@@ -18,6 +18,8 @@ const projects = defineCollection({
     featured: z.boolean(),
     order: z.number(),
     result: z.string().optional(),
+    findings: z.array(z.string()).optional(),
+    details: z.array(z.string()).optional(),
   }),
 });
 

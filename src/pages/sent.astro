@@ -1,0 +1,11 @@
+---
+import { site } from '@/data/site';
+import { graph, person } from '@/lib/jsonld';
+import Base from '@/layouts/Base.astro';
+---
+<Base title={`~/neelesh/sent · ${site.name}`} description="Your message was sent." jsonLd={graph(person(Astro.site))} noindex>
+  <p class="prompt">mail neelesh</p>
+  <h1>Message sent.</h1>
+  <p>Thanks, I'll get back to you soon.</p>
+  <nav class="links"><a href="/">Home</a></nav>
+</Base>

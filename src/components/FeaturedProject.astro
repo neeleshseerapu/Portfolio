@@ -7,12 +7,51 @@ interface Props {
   as?: 'h1' | 'h3';
 }
 const { project, as } = Astro.props;
-const { title, videoUrl } = project.data;
+const { title, videoUrl, logo } = project.data;
 const local = videoUrl?.startsWith('/');
 ---
+<div class="feature-wrap">
 <ProjectCard project={project} as={as} featured>
   {local && videoUrl.endsWith('.gif') && <img class="media" src={videoUrl} alt={`Demo of ${title}`} />}
   {local && !videoUrl.endsWith('.gif') && (
     <video class="media" src={videoUrl} controls muted playsinline preload="metadata" aria-label={`Demo video of ${title}`}></video>
   )}
+  {!local && logo && <img class="hero-logo" src={logo} alt="" />}
 </ProjectCard>
+</div>
+
+<style>
+  .feature-wrap { container-type: inline-size; display: flex; flex-direction: column; flex: 1; }
+  .feature-wrap > :global(.card) { flex: 1; font-size: 1.05em; }
+  .feature-wrap + .feature-wrap { margin-top: 1rem; }
+  .hero-logo { display: none; }
+  @container (min-width: 40rem) {
+    .feature-wrap :global(.featured) > .hero-logo {
+      display: block;
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      align-self: center;
+      width: clamp(3.5rem, 30cqi - 6rem, 12rem);
+      height: auto;
+      pointer-events: none;
+    }
+    .feature-wrap > :global(.featured:has(.hero-logo)) {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: clamp(1rem, 3cqi, 2rem);
+      padding: clamp(1rem, 2vw, 1.5rem) clamp(1.1rem, 2.5vw, 1.75rem);
+    }
+    .feature-wrap :global(.featured:has(.hero-logo) > *) { grid-column: 1 / -1; }
+    .feature-wrap :global(.featured:has(.hero-logo) > .title) { grid-column: 2; grid-row: 1; align-self: end; }
+    .feature-wrap :global(.featured:has(.hero-logo) > .lede) {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: start;
+      font-size: clamp(1em, 0.8em + 1cqi, 1.4em);
+      line-height: 1.45;
+      color: var(--fg);
+    }
+    .feature-wrap :global(.featured:has(.hero-logo) > .title img) { display: none; }
+    .feature-wrap :global(.featured:has(.hero-logo) > .lede + *) { margin-top: 1rem; }
+  }
+</style>

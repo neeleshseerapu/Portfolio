@@ -1,0 +1,418 @@
+---
+import { site } from '@/data/site';
+import { getProjects } from '@/lib/content';
+
+const projects = (await getProjects()).map(({ data }) => ({
+  slug: data.slug,
+  title: data.title,
+  oneLiner: data.oneLiner,
+  result: data.result,
+  repoUrl: data.repoUrl,
+  demoUrl: data.demoUrl,
+}));
+const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, projects }).replace(/</g, '\\u003c');
+---
+<section id="contact" class="shell" aria-labelledby="contact-title">
+  <div class="window">
+    <h2 id="contact-title" class="bar">contact</h2>
+    <div class="screen">
+      <div id="shell-log" role="log" aria-live="polite"></div>
+
+      <form id="mail" method="post" action="/api/message">
+        <p class="field">
+          <label for="mail-from">from:</label>
+          <input id="mail-from" name="from" type="email" required maxlength="254" autocomplete="email" enterkeyhint="next" placeholder="you@example.com" />
+        </p>
+        <p class="field">
+          <label for="mail-subject">subject:</label>
+          <input id="mail-subject" name="subject" maxlength="150" enterkeyhint="next" placeholder="(optional)" />
+        </p>
+        <p class="field">
+          <label for="mail-message">message:</label>
+          <textarea id="mail-message" name="message" required maxlength="5000" rows="3" enterkeyhint="send"></textarea>
+        </p>
+        <div class="trap" aria-hidden="true">
+          <label>Leave this empty <input name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
+        <input type="hidden" name="ms" />
+        <p class="error" role="alert"></p>
+        <p class="actions">
+          <button type="submit">send</button>
+          <button type="button" data-cancel data-js hidden>cancel</button>
+          <span class="muted keys" data-js hidden>[enter] send, [esc] cancel</span>
+        </p>
+      </form>
+
+      <p class="prompt cmdline" data-js hidden>
+        <input id="cmd" aria-label="Terminal command" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="   // click me" />
+        <span class="cursor" aria-hidden="true"></span>
+      </p>
+    </div>
+  </div>
+  <p class="chips" data-js hidden>
+    <button type="button" data-run="mail">mail</button>
+    <button type="button" data-run="help">help</button>
+    <button type="button" data-run="ls">ls</button>
+  </p>
+</section>
+<a href="#contact" class="to-shell">message me</a>
+<script type="application/json" id="shell-data" set:html={shellData} />
+
+<script>
+  type Project = { slug: string; title: string; oneLiner: string; result?: string; repoUrl: string; demoUrl?: string };
+  type Data = { tagline: string; links: Record<string, string>; projects: Project[] };
+
+  const data: Data = JSON.parse(document.getElementById('shell-data')!.textContent!);
+  const shell = document.getElementById('contact')!;
+  const log = document.getElementById('shell-log')!;
+  const cmd = document.getElementById('cmd') as HTMLInputElement;
+  const form = document.getElementById('mail') as HTMLFormElement;
+  const fields = [...form.querySelectorAll<HTMLElement>('.field')];
+  const controls = fields.map((f) => f.querySelector<HTMLInputElement | HTMLTextAreaElement>('input, textarea')!);
+  const message = controls[2] as HTMLTextAreaElement;
+  const error = form.querySelector<HTMLElement>('.error')!;
+  const screen = shell.querySelector<HTMLElement>('.screen')!;
+  const reveal = () => {
+    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    shell.scrollIntoView({ block: 'end', behavior: smooth ? 'smooth' : 'auto' });
+  };
+  const follow = () => {
+    screen.scrollTop = screen.scrollHeight;
+    if (shell.contains(document.activeElement)) reveal();
+  };
+  const focus = (el: HTMLElement) => el.focus({ preventScroll: true });
+
+  shell.classList.add('ready');
+  for (const el of shell.querySelectorAll<HTMLElement>('[data-js]')) el.hidden = false;
+  message.rows = 1;
+
+  const projectBySlug = new Map(data.projects.map((p) => [p.slug, p]));
+  const targets: Record<string, string> = {
+    resume: data.links.resume,
+    github: data.links.github,
+    linkedin: data.links.linkedin,
+    email: data.links.email && `mailto:${data.links.email}`,
+    ...Object.fromEntries(data.projects.map((p) => [p.slug, `/projects/${p.slug}/`])),
+  };
+  for (const key of Object.keys(targets)) if (!targets[key]) delete targets[key];
+
+  const print = (...parts: (string | Node)[]) => {
+    const p = document.createElement('p');
+    p.append(...parts);
+    log.append(p);
+    follow();
+    return p;
+  };
+  const styled = (text: string, className: string) => Object.assign(document.createElement('span'), { className, textContent: text });
+  const link = (text: string, href: string) => {
+    const a = Object.assign(document.createElement('a'), { textContent: text, href });
+    if (!href.startsWith('/') || href.endsWith('.pdf')) Object.assign(a, { target: '_blank', rel: 'noopener' });
+    return a;
+  };
+  const echo = (text: string) => (print(text).className = 'prompt');
+
+  const help: [string, string][] = [
+    ['mail', 'send me a message'],
+    ['ls', 'list projects'],
+    ['cat <project>', 'show a project'],
+    ['open <name>', `open ${Object.keys(targets).join(', ')}`],
+    ['whoami', 'about me'],
+    ['clear', 'clear the screen'],
+    ['help', 'show this list'],
+  ];
+
+  const commands: Record<string, (args: string[]) => void> = {
+    help: () => help.forEach(([c, d]) => print(styled(c.padEnd(15), 'ok'), styled(d, 'muted'))),
+    ls: () => print(...data.projects.flatMap((p) => [link(`${p.slug}/`, `/projects/${p.slug}/`), '  '])),
+    cat: ([name]) => {
+      if (!name) return void print('usage: cat <project>');
+      const p = projectBySlug.get(name.toLowerCase().replace(/\/$/, ''));
+      if (!p) return void print(`cat: ${name}: no such project. Try ls.`);
+      print(styled(p.title, 'title'));
+      print(p.oneLiner);
+      if (p.result) print(styled(p.result, 'ok'));
+      const links = print(link('code', p.repoUrl), '  ', ...(p.demoUrl ? [link('demo', p.demoUrl), '  '] : []), link('details', `/projects/${p.slug}/`));
+      links.className = 'links';
+    },
+    open: ([name]) => {
+      const url = name && targets[name.toLowerCase()];
+      if (!url) return void print(`usage: open <${Object.keys(targets).join('|')}>`);
+      print(`opening ${name}...`);
+      if (url.startsWith('/') && !url.endsWith('.pdf')) location.assign(url);
+      else window.open(url, '_blank', 'noopener');
+    },
+    whoami: () => data.tagline.split(/(?<=[.!?])\s+/).forEach((s) => print(s)),
+    clear: () => {
+      log.replaceChildren();
+      follow();
+    },
+    mail: () => startMail(),
+  };
+
+  const hint = (text: string) => () => (cmd.placeholder = `\u00a0\u00a0\u00a0// ${text}`);
+  const idleHint = matchMedia('(pointer: coarse)').matches ? 'tap me' : 'click me';
+  hint(idleHint)();
+  cmd.addEventListener('focus', hint('try: mail, or help'));
+  cmd.addEventListener('blur', hint(idleHint));
+
+  shell.addEventListener('focusin', reveal);
+
+  const toShell = document.querySelector<HTMLAnchorElement>('.to-shell')!;
+  toShell.addEventListener('click', (e) => {
+    e.preventDefault();
+    focus(cmd);
+    reveal();
+  });
+  new IntersectionObserver(([entry]) => {
+    toShell.classList.toggle('away', entry.intersectionRatio >= 0.99);
+    const active = document.activeElement;
+    if (!entry.isIntersecting && active instanceof HTMLElement && shell.contains(active)) active.blur();
+  }, {
+    threshold: [0, 0.99],
+  }).observe(shell.querySelector('.window')!);
+
+  const history: string[] = [];
+  let historyIndex = 0;
+
+  function run(input: string) {
+    const [name = '', ...args] = input.trim().split(/\s+/);
+    echo(input);
+    if (!name) return;
+    history.push(input);
+    historyIndex = history.length;
+    const command = commands[name.toLowerCase()];
+    if (command) command(args);
+    else print(`command not found: ${name}. Type help.`);
+  }
+
+  function complete() {
+    const parts = cmd.value.split(/\s+/);
+    const options =
+      parts.length === 1 ? Object.keys(commands)
+      : parts[0] === 'cat' ? [...projectBySlug.keys()]
+      : parts[0] === 'open' ? Object.keys(targets)
+      : [];
+    const word = parts.at(-1)!;
+    const matches = options.filter((o) => o.startsWith(word));
+    if (matches.length === 0) return;
+    if (matches.length > 1) print(styled(matches.join('  '), 'muted'));
+    let prefix = matches[0];
+    for (const m of matches) while (!m.startsWith(prefix)) prefix = prefix.slice(0, -1);
+    parts[parts.length - 1] = matches.length === 1 ? `${prefix} ` : prefix;
+    cmd.value = parts.join(' ');
+  }
+
+  cmd.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) {
+      e.preventDefault();
+      run(cmd.value);
+      cmd.value = '';
+      follow();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      historyIndex = Math.max(0, Math.min(history.length, historyIndex + (e.key === 'ArrowUp' ? -1 : 1)));
+      cmd.value = history[historyIndex] ?? '';
+    } else if (e.key === 'Tab' && cmd.value.trim()) {
+      e.preventDefault();
+      complete();
+    }
+  });
+
+  let step = 0;
+  let startedAt = 0;
+
+  function show(n: number) {
+    step = n;
+    fields.forEach((f, i) => f.classList.toggle('shown', i <= n));
+    focus(controls[n]);
+    follow();
+  }
+
+  function startMail() {
+    form.reset();
+    error.textContent = '';
+    startedAt = Date.now();
+    shell.classList.add('mailing');
+    show(0);
+  }
+
+  function endMail(summary: (string | Node)[][]) {
+    for (const parts of summary) print(...parts);
+    shell.classList.remove('mailing');
+    form.reset();
+    message.style.height = '';
+    focus(cmd);
+    follow();
+  }
+
+  function transcript() {
+    return controls.slice(0, step + 1).map((c, i) => [styled(fields[i].querySelector('label')!.textContent!, 'label'), ' ', c.value || styled('(none)', 'muted')]);
+  }
+
+  function next() {
+    const control = controls[step];
+    if (!control.checkValidity()) {
+      error.textContent = `${control.name}: ${control.validationMessage}`;
+      return void follow();
+    }
+    error.textContent = '';
+    if (step < controls.length - 1) show(step + 1);
+    else form.requestSubmit();
+  }
+
+  form.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') endMail([...transcript(), [styled('mail: cancelled', 'muted')]]);
+    else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.target instanceof HTMLElement && e.target.matches('input, textarea')) {
+      e.preventDefault();
+      next();
+    }
+  });
+
+  form.querySelector('[data-cancel]')!.addEventListener('click', () => endMail([...transcript(), [styled('mail: cancelled', 'muted')]]));
+
+  message.addEventListener('input', () => {
+    message.style.height = 'auto';
+    message.style.height = `${message.scrollHeight}px`;
+    follow();
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const invalid = controls.findIndex((c) => !c.checkValidity());
+    if (invalid !== -1) {
+      show(Math.max(invalid, step));
+      focus(controls[invalid]);
+      error.textContent = `${controls[invalid].name}: ${controls[invalid].validationMessage}`;
+      return void follow();
+    }
+    (form.elements.namedItem('ms') as HTMLInputElement).value = String(Date.now() - startedAt);
+    error.textContent = 'sending...';
+    form.inert = true;
+    try {
+      const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+      const body = (await res.json()) as { ok: boolean; message: string };
+      if (!body.ok) throw new Error(body.message);
+      step = controls.length - 1;
+      endMail([...transcript(), [styled("sent. Thanks, I'll get back to you soon.", 'ok')]]);
+    } catch (err) {
+      error.textContent = `mail: ${err instanceof Error ? err.message : 'sending failed'}`;
+      follow();
+    } finally {
+      form.inert = false;
+    }
+  });
+
+  for (const button of shell.querySelectorAll<HTMLButtonElement>('[data-run]')) {
+    button.addEventListener('click', () => {
+      if (shell.classList.contains('mailing')) return;
+      run(button.dataset.run!);
+    });
+  }
+
+  shell.addEventListener('click', (e) => {
+    if (e.target instanceof Element && e.target.closest('a, button, input, textarea, label')) return;
+    if (getSelection()?.toString()) return;
+    focus(shell.classList.contains('mailing') ? controls[step] : cmd);
+  });
+</script>
+
+<style>
+  [hidden] { display: none !important; }
+  .to-shell {
+    position: fixed;
+    top: clamp(0.75rem, 2vw, 1.25rem);
+    right: clamp(0.75rem, 2vw, 1.25rem);
+    z-index: 1;
+    padding: 0.45rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--line));
+    background: color-mix(in srgb, var(--card) 85%, transparent);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--fg);
+    font-size: 0.9em;
+    text-decoration: none;
+    transition: opacity 0.25s, transform 0.25s, visibility 0.25s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .to-shell::before { content: '> '; content: '> ' / ''; color: var(--accent); }
+  .to-shell:hover { color: var(--fg); border-color: var(--accent); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent); text-decoration: none; }
+  .to-shell.away, :global(.intro) .to-shell { opacity: 0; transform: translateY(-0.5rem); visibility: hidden; }
+  @media (prefers-reduced-motion: reduce) { .to-shell { transition: none; } }
+  .shell { scroll-margin-bottom: clamp(1.5rem, 5vw, 4rem); }
+  .window {
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 70%, #000);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .window:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+  .bar {
+    margin: 0;
+    padding: 0.4rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--card);
+    color: var(--muted);
+    font-size: 0.85em;
+    text-shadow: none;
+  }
+  .bar::before { content: '~/neelesh/'; content: '~/neelesh/' / ''; }
+  .screen {
+    max-height: min(16rem, 55vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.6rem 0.9rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .chips { margin-top: 0.75rem !important; }
+  .shell p { margin: 0.35rem 0; max-width: none; }
+  #shell-log :global(.title) { color: var(--accent); font-weight: 700; }
+  #shell-log :global(.label), label { color: var(--accent); }
+  #shell-log :global(p) { white-space: pre-wrap; margin: 0.15rem 0; }
+  #shell-log :global(.prompt) { margin-top: 0.6rem; }
+
+  .field { display: flex; gap: 1ch; align-items: baseline; }
+  input, textarea {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--fg);
+    font: inherit;
+    caret-color: var(--ok);
+    resize: none;
+  }
+  textarea { overflow: hidden; }
+  input:focus, textarea:focus { outline: none; }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }
+  .field:focus-within label, .cmdline:focus-within::before { text-decoration: underline; text-underline-offset: 4px; }
+
+  button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--link);
+    font: inherit;
+    cursor: pointer;
+    text-transform: lowercase;
+  }
+  button::before { content: '['; content: '[' / ''; }
+  button::after { content: ']'; content: ']' / ''; }
+  button:hover { color: var(--ok); text-decoration: underline; }
+  button:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+  .chips, .actions { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; align-items: baseline; }
+  .error { color: var(--ok); }
+  .error:empty { display: none; }
+
+  .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .cmdline { position: relative; display: flex; gap: 1ch; }
+  .cmdline .cursor { position: absolute; left: 12ch; top: 0.2em; }
+  .cmdline:focus-within .cursor, .cmdline:has(input:not(:placeholder-shown)) .cursor { display: none; }
+
+  .ready #mail { display: none; }
+  .ready.mailing #mail { display: block; }
+  .ready .field:not(.shown) { display: none; }
+  .mailing .cmdline, .mailing .chips { display: none; }
+  @media (pointer: coarse) { .keys { display: none; } }
+</style>
