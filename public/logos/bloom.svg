@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="petal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bdf0a0"/>
+      <stop offset="1" stop-color="#8fdc6e"/>
+    </linearGradient>
+    <radialGradient id="core" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="0.45" stop-color="#c8f7a6" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#c8f7a6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.4" flood-color="#8fdc6e" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+  <g transform="translate(5 11) scale(1.6)">
+    <!-- little stem rising from the top dip, with a leaf -->
+    <path d="M16,6 C16,1.5 16.2,-2.5 18.2,-4.4" fill="none" stroke="#5f8f3e"
+      stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M18.2,-4.4 C20.8,-6.4 24,-5.4 24.6,-2.6 C21.8,-2.1 19.2,-2.5 18.2,-4.4 Z"
+      fill="#7cba58"/>
+    <g filter="url(#glow)">
+      <path fill="url(#petal)" stroke="#c8f7a6" stroke-width="0.9"
+        d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4
+           c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+      <ellipse cx="16" cy="11" rx="9" ry="7" fill="url(#core)"/>
+      <!-- gourd ribs -->
+      <g fill="none" stroke="rgba(34,52,32,0.30)" stroke-width="0.9" stroke-linecap="round">
+        <path d="M16,7 L16,28.5"/>
+        <path d="M12.5,6 Q10.4,17 16,28.5"/>
+        <path d="M19.5,6 Q21.6,17 16,28.5"/>
+        <path d="M9,4.6 Q6,17 16,27.8"/>
+        <path d="M23,4.6 Q26,17 16,27.8"/>
+      </g>
+    </g>
+  </g>
+</svg>

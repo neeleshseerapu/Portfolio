@@ -1,0 +1,18 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ProjectCard from './ProjectCard.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  as?: 'h1' | 'h3';
+}
+const { project, as } = Astro.props;
+const { title, videoUrl } = project.data;
+const local = videoUrl?.startsWith('/');
+---
+<ProjectCard project={project} as={as}>
+  {local && videoUrl.endsWith('.gif') && <img src={videoUrl} alt={`Demo of ${title}`} />}
+  {local && !videoUrl.endsWith('.gif') && (
+    <video src={videoUrl} controls muted playsinline preload="metadata" aria-label={`Demo video of ${title}`}></video>
+  )}
+</ProjectCard>

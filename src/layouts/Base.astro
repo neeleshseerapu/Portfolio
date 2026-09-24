@@ -1,0 +1,76 @@
+---
+import { site } from '@/data/site';
+import Footer from '@/components/Footer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  jsonLd: string;
+}
+const { title, description, jsonLd } = Astro.props;
+const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={site.name} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content={site.name} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+    <script type="application/ld+json" set:html={jsonLd} />
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+    --fg: #1a1a1a;
+    --muted: #555;
+    --bg: #fff;
+    --line: #ddd;
+    --link: #0b57d0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #eee;
+      --muted: #aaa;
+      --bg: #111;
+      --line: #333;
+      --link: #8ab4f8;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 44rem;
+    padding: 1.5rem 1rem;
+    font: 1rem/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    overflow-wrap: anywhere;
+  }
+  a { color: var(--link); }
+  a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  img, video { max-width: 100%; height: auto; }
+  section { margin-top: 2.5rem; }
+  article { border-top: 1px solid var(--line); padding: 1rem 0; }
+  .muted { color: var(--muted); }
+  .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; padding: 0; list-style: none; }
+</style>
