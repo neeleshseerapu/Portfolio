@@ -15,10 +15,11 @@ const { Content } = await render(project);
 const jsonLd = graph(person(Astro.site), sourceCode(project, Astro.site));
 ---
 <Base title={`${project.data.title} · ${site.name}`} description={project.data.oneLiner} jsonLd={jsonLd}>
-  <nav aria-label="Breadcrumb"><a href="/">← {site.name}</a></nav>
+  <nav aria-label="Breadcrumb" class="links" style="margin-bottom: 1.5rem"><a href="/">Home</a></nav>
+  <p class="prompt" aria-hidden="true" style="margin-bottom: 0.75rem">cat projects/{project.data.slug}.md</p>
   <FeaturedProject project={project} as="h1" />
-  <section aria-labelledby="writeup">
-    <h2 id="writeup">Write-up</h2>
+  <section aria-labelledby="writeup" class="lines">
+    <h2 id="writeup" data-cmd="cat" data-ext=".md">writeup</h2>
     <Content />
   </section>
 </Base>

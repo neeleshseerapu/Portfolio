@@ -10,6 +10,5 @@ logo: /logos/bloom.svg
 featured: false
 order: 2
 ---
-I built Bloom to run entirely in the browser, with no backend. You paste your own API key for Anthropic, OpenAI, or Gemini, and requests go straight from your browser to that provider. That kept the app a static site I can host for free, and nobody's AI usage runs through a server I pay for.
-
-The tradeoff is that your key is stored in your browser. So the README asks people to use a personal key, and the app estimates the cost of every AI call and lets you set a spend limit per session.
+Bloom runs entirely in the browser: you bring your own API key, and requests go straight to Anthropic, OpenAI, or Gemini.
+That keeps it a free static site with no server to run, and a per-session spend limit keeps a key from running up a bill.
