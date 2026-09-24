@@ -72,10 +72,12 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
   const message = controls[2] as HTMLTextAreaElement;
   const error = form.querySelector<HTMLElement>('.error')!;
   const screen = shell.querySelector<HTMLElement>('.screen')!;
-  const reveal = () => {
+  const touch = () => matchMedia('(pointer: coarse)').matches;
+  const scrollToShell = () => {
     const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
     shell.scrollIntoView({ block: 'end', behavior: smooth ? 'smooth' : 'auto' });
   };
+  const reveal = () => !touch() && scrollToShell();
   const follow = () => {
     screen.scrollTop = screen.scrollHeight;
     if (shell.contains(document.activeElement)) reveal();
@@ -160,6 +162,7 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
   const toShell = document.querySelector<HTMLAnchorElement>('.to-shell')!;
   toShell.addEventListener('click', (e) => {
     e.preventDefault();
+    if (touch()) return scrollToShell();
     focus(cmd);
     reveal();
   });
@@ -223,10 +226,14 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
 
   function show(n: number) {
     step = n;
-    fields.forEach((f, i) => f.classList.toggle('shown', i <= n));
     focus(controls[n]);
     follow();
   }
+
+  form.addEventListener('focusin', (e) => {
+    const i = controls.indexOf(e.target as HTMLInputElement);
+    if (i !== -1) step = i;
+  });
 
   function startMail() {
     form.reset();
@@ -246,7 +253,7 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
   }
 
   function transcript() {
-    return controls.slice(0, step + 1).map((c, i) => [styled(fields[i].querySelector('label')!.textContent!, 'label'), ' ', c.value || styled('(none)', 'muted')]);
+    return controls.map((c, i) => [styled(fields[i].querySelector('label')!.textContent!, 'label'), ' ', c.value || styled('(none)', 'muted')]);
   }
 
   function next() {
@@ -280,8 +287,7 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
     e.preventDefault();
     const invalid = controls.findIndex((c) => !c.checkValidity());
     if (invalid !== -1) {
-      show(Math.max(invalid, step));
-      focus(controls[invalid]);
+      show(invalid);
       error.textContent = `${controls[invalid].name}: ${controls[invalid].validationMessage}`;
       return void follow();
     }
@@ -292,7 +298,6 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
       const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
       const body = (await res.json()) as { ok: boolean; message: string };
       if (!body.ok) throw new Error(body.message);
-      step = controls.length - 1;
       endMail([...transcript(), [styled("sent. Thanks, I'll get back to you soon.", 'ok')]]);
     } catch (err) {
       error.textContent = `mail: ${err instanceof Error ? err.message : 'sending failed'}`;
@@ -412,7 +417,6 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
 
   .ready #mail { display: none; }
   .ready.mailing #mail { display: block; }
-  .ready .field:not(.shown) { display: none; }
   .mailing .cmdline, .mailing .chips { display: none; }
   @media (pointer: coarse) { .keys { display: none; } }
 </style>
