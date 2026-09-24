@@ -8,7 +8,11 @@ interface Props {
   featured?: boolean;
 }
 const { project, as: Heading = 'h3', featured = false } = Astro.props;
-const { title, slug, oneLiner, stack, result, repoUrl, demoUrl, videoUrl, logo } = project.data;
+const { title, slug, oneLiner, stack, result, findings, details, repoUrl, demoUrl, videoUrl, logo } = project.data;
+const notes = [
+  ['Key findings', findings],
+  ['How it works', details],
+].filter(([, items]) => items?.length) as [string, string[]][];
 const links = [
   ['Code', repoUrl],
   ['Live demo', demoUrl],
@@ -21,32 +25,68 @@ const links = [
     <Heading>{Heading === 'h1' ? title : <a href={`/projects/${slug}/`}>{title}</a>}</Heading>
   </div>
   <slot />
-  <p class="lines">{lines(oneLiner)}</p>
+  <p class="lede lines">{lines(oneLiner)}</p>
   {result && <p class="ok lines"><strong>Result:</strong> {lines(result)}</p>}
+  {notes.length > 0 && (
+    <div class="more">
+      <div class="notes" id={`${slug}-notes`}>
+        {notes.map(([label, items]) => (
+          <div>
+            <p class="label">{label}</p>
+            <ul>{items.map((item) => <li>{item}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+      <button type="button" class="more-toggle" aria-expanded="false" aria-controls={`${slug}-notes`}>show more</button>
+    </div>
+  )}
   <p class="muted">Stack: {stack.join(', ')}</p>
   <ul class="links">
     {links.map(([label, href]) => <li><a href={href}>{label}</a></li>)}
   </ul>
 </article>
 
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>('.more-toggle')) {
+    button.addEventListener('click', () => {
+      const expanded = button.closest('.more')!.classList.toggle('expanded');
+      button.setAttribute('aria-expanded', String(expanded));
+      button.textContent = expanded ? 'show less' : 'show more';
+    });
+  }
+</script>
+
 <style>
   .title { display: flex; align-items: center; gap: 0.6rem; }
-  .title img { height: 1.25em; width: auto; border-radius: 22%; flex: none; }
+  .title img { height: 1.25em; width: auto; flex: none; }
   .featured .title img { height: 2.25em; }
   .title h1, .title h3 { margin: 0; color: var(--accent); text-shadow: var(--glow-accent); }
   .title a { color: inherit; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 0.75rem 2rem; margin: 0.9rem 0; }
+  .notes .label { margin: 0 0 0.25rem; color: var(--accent); font-weight: 700; }
+  .notes ul { margin: 0; padding: 0; list-style: none; }
+  .notes li { padding-left: 2ch; text-indent: -2ch; margin: 0.2rem 0; }
+  .notes li::before { content: '- '; content: '- ' / ''; color: var(--muted); }
   .card { position: relative; }
-  .title a::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
+  .title a::after { content: ''; position: absolute; inset: 0; }
   .title a:focus-visible { outline: none; }
   .card:has(.title a:focus-visible) { outline: 2px solid var(--ok); outline-offset: 3px; }
-  .links a, .card :global(.media) { position: relative; z-index: 1; }
+  .links a, .card :global(.media), .more-toggle { position: relative; z-index: 1; }
+  .more-toggle { display: none; margin: 0.25rem 0 0.5rem; padding: 0; border: 0; background: none; color: var(--link); font: inherit; cursor: pointer; }
+  .more-toggle::before { content: '['; content: '[' / ''; }
+  .more-toggle::after { content: ']'; content: ']' / ''; }
+  .more-toggle:hover { color: var(--ok); text-decoration: underline; }
+  .more-toggle:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+  @media (orientation: portrait) {
+    :global(.js) .more:not(.expanded) .notes { display: none; }
+    :global(.js) .more-toggle { display: inline; }
+  }
   .featured { padding: clamp(1.25rem, 3vw, 2rem); }
-  .featured + .featured { margin-top: 1rem; }
   .featured .title h3 { font-size: 1.4em; }
   .featured .title h3::before { content: '> '; content: '> ' / ''; }
-  .featured :global(.media) { display: block; margin: 1rem 0; border-radius: 6px; border: 1px solid var(--line); }
-  @media (min-width: 60rem) {
-    .featured:has(:global(.media)) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); column-gap: 2rem; }
+  .featured :global(.media) { display: block; margin: 1rem 0; border: 1px solid var(--line); }
+  @container (min-width: 50rem) {
+    .featured:has(:global(.media)) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); column-gap: 2rem; align-content: start; }
     .featured :global(.media) { grid-column: 2; grid-row: 1 / span 6; margin: 0; }
   }
 </style>

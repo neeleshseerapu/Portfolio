@@ -1,14 +1,15 @@
 ---
 import { site } from '@/data/site';
 import ContactLinks from './ContactLinks.astro';
+import Shell from './Shell.astro';
 ---
 <footer>
   <ContactLinks />
-  <p class="muted">{site.name}</p>
-  <p class="prompt" aria-hidden="true"><span class="cursor"></span></p>
+  <p class="muted">© {new Date().getFullYear()} {site.name}</p>
+  <Shell />
 </footer>
 
 <style>
   footer { margin-top: clamp(2rem, 5vw, 3rem); padding-top: 1.5rem; border-top: 1px solid var(--line); }
-  footer p { margin: 0.75rem 0 0; }
+  footer > p { margin: 0.75rem 0 1.75rem; }
 </style>

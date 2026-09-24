@@ -14,7 +14,7 @@ const { project } = Astro.props as { project: CollectionEntry<'projects'> };
 const { Content } = await render(project);
 const jsonLd = graph(person(Astro.site), sourceCode(project, Astro.site));
 ---
-<Base title={`${project.data.title} · ${site.name}`} description={project.data.oneLiner} jsonLd={jsonLd}>
+<Base title={`~/neelesh/${project.data.slug} · ${site.name}`} description={project.data.oneLiner} jsonLd={jsonLd}>
   <nav aria-label="Breadcrumb" class="links" style="margin-bottom: 1.5rem"><a href="/">Home</a></nav>
   <p class="prompt" aria-hidden="true" style="margin-bottom: 0.75rem">cat projects/{project.data.slug}.md</p>
   <FeaturedProject project={project} as="h1" />

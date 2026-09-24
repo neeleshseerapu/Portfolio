@@ -8,8 +8,9 @@ interface Props {
   description: string;
   jsonLd: string;
   intro?: boolean;
+  noindex?: boolean;
 }
-const { title, description, jsonLd, intro = false } = Astro.props;
+const { title, description, jsonLd, intro = false, noindex = false } = Astro.props;
 const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
 ---
 <!doctype html>
@@ -21,6 +22,7 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content={site.name} />
+    {noindex && <meta name="robots" content="noindex" />}
     {canonical && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -31,9 +33,13 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <Font cssVariable="--font-mono" preload />
     <script type="application/ld+json" set:html={jsonLd} />
     <script is:inline define:vars={{ intro }}>
+      document.documentElement.classList.add('js');
       try {
         if (intro && !sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
           document.documentElement.classList.add('intro');
@@ -63,14 +69,13 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
     --ok: #e3ef5b;
     --glow-accent: 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
     --glow-ok: 0 0 3px color-mix(in srgb, var(--ok) 30%, transparent);
-    --radius: 10px;
   }
   * { box-sizing: border-box; }
-  html { background: var(--bg); }
+  html { background: var(--bg); font-size: clamp(100%, 0.6rem + 0.45vw, 125%); }
   body {
     margin: 0 auto;
-    max-width: 72rem;
-    padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 2.5rem);
+    max-width: 96rem;
+    padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
     font: clamp(0.875rem, 0.8rem + 0.35vw, 1rem) / 1.65 var(--font-mono), monospace;
     color: var(--fg);
     background: var(--bg);
@@ -87,7 +92,7 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
   p { max-width: 72ch; }
   a { color: var(--link); text-decoration: none; }
   a:hover { color: var(--ok); text-decoration: underline; }
-  a:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; border-radius: 2px; }
+  a:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
   img, video { max-width: 100%; height: auto; }
   pre { overflow-x: auto; }
 
@@ -119,7 +124,6 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
   .card {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
     padding: 1.1rem 1.25rem;
     transition: border-color 0.2s;
   }

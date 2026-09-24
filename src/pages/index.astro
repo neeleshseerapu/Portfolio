@@ -16,22 +16,41 @@ const jsonLd = graph(person(Astro.site), ...projects.map((p) => sourceCode(p, As
 ---
 <Base title={site.title} description={site.tagline} jsonLd={jsonLd} intro>
   <Header />
-  {featured.length > 0 && (
-    <section aria-labelledby="featured">
-      <h2 id="featured" data-cmd="cat" data-ext=".md">featured</h2>
-      {featured.map((p) => <FeaturedProject project={p} />)}
-    </section>
-  )}
-  {others.length > 0 && (
-    <section aria-labelledby="projects">
-      <h2 id="projects" data-cmd="ls" data-ext="/">projects</h2>
-      <div class="grid">{others.map((p) => <ProjectCard project={p} />)}</div>
-    </section>
-  )}
-  {experience.length > 0 && (
-    <section aria-labelledby="experience">
-      <h2 id="experience" data-cmd="cat" data-ext=".log">experience</h2>
-      {experience.map((item) => <ExperienceItem item={item} />)}
-    </section>
-  )}
+  <div class="home">
+    {featured.length > 0 && (
+      <section class="featured-sec" aria-labelledby="featured">
+        <h2 id="featured" data-cmd="cat" data-ext=".md">featured</h2>
+        {featured.map((p) => <FeaturedProject project={p} />)}
+      </section>
+    )}
+    {others.length > 0 && (
+      <section class="projects-sec" aria-labelledby="projects">
+        <h2 id="projects" data-cmd="ls" data-ext="/">projects</h2>
+        <div class="grid">{others.map((p) => <ProjectCard project={p} />)}</div>
+      </section>
+    )}
+    {experience.length > 0 && (
+      <section aria-labelledby="experience">
+        <h2 id="experience" data-cmd="cat" data-ext=".log">experience</h2>
+        <div class="logs">{experience.map((item) => <ExperienceItem item={item} />)}</div>
+      </section>
+    )}
+  </div>
 </Base>
+
+<style>
+  .logs { display: grid; gap: 1.75rem clamp(1.5rem, 3vw, 3rem); }
+  @media (min-width: 64rem) {
+    .home:has(.featured-sec):has(.projects-sec) {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      column-gap: clamp(1.5rem, 3vw, 3rem);
+    }
+    .home > section { grid-column: 1 / -1; }
+    .home > .featured-sec { grid-column: 1; display: flex; flex-direction: column; }
+    .home > .projects-sec { grid-column: 2; display: flex; flex-direction: column; }
+    .projects-sec > .grid { flex: 1; display: flex; flex-direction: column; }
+    .projects-sec > .grid > :global(.card) { flex: 1 1 auto; }
+    .logs { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
+  }
+</style>
