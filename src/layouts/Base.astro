@@ -18,7 +18,7 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1c1819" />
+    <meta name="theme-color" content="#0b0a12" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content={site.name} />
@@ -41,6 +41,9 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
     <script is:inline define:vars={{ intro }}>
       document.documentElement.classList.add('js');
       try {
+        if (localStorage.getItem('theme') === 'retro') document.documentElement.dataset.theme = 'retro';
+      } catch {}
+      try {
         if (intro && !sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
           document.documentElement.classList.add('intro');
         }
@@ -53,12 +56,72 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
       <slot />
     </main>
     <Footer />
+    <div class="corner">
+      <a href="#contact" class="to-shell">message me</a>
+      <button type="button" class="retro-toggle" aria-pressed="false" aria-label="Retro theme" title="Retro theme">
+        <svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="7" width="20" height="10" rx="2" />
+          <path d="M6.5 10v4M4.5 12h4" />
+          <circle cx="15.5" cy="13" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="18.5" cy="11" r="1.1" fill="currentColor" stroke="none" />
+        </svg>
+      </button>
+    </div>
+    <script>
+      const root = document.documentElement;
+      const toggle = document.querySelector<HTMLButtonElement>('.retro-toggle')!;
+      const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')!;
+      const sync = () => {
+        const retro = root.dataset.theme === 'retro';
+        toggle.setAttribute('aria-pressed', String(retro));
+        meta.content = getComputedStyle(root).getPropertyValue('--bg').trim();
+      };
+      sync();
+      toggle.addEventListener('click', () => {
+        if (root.dataset.theme === 'retro') delete root.dataset.theme;
+        else root.dataset.theme = 'retro';
+        try {
+          localStorage.setItem('theme', root.dataset.theme ?? 'modern');
+        } catch {}
+        sync();
+      });
+    </script>
   </body>
 </html>
 
 <style is:global>
   :root {
     color-scheme: dark;
+    --bg: #0b0a12;
+    --card: #13111d;
+    --line: #282339;
+    --fg: #ece9f6;
+    --muted: #9a94b0;
+    --accent: #b686ff;
+    --link: #d9c8ff;
+    --ok: #d9f45f;
+    --glow-accent: 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+    --glow-ok: 0 0 3px color-mix(in srgb, var(--ok) 30%, transparent);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html {
+    font-size: clamp(100%, 0.6rem + 0.45vw, 125%);
+    background:
+      radial-gradient(60rem 30rem at 10% 0%, rgb(192 132 252 / 0.11), transparent 70%),
+      radial-gradient(55rem 28rem at 90% 0%, rgb(190 242 100 / 0.05), transparent 70%),
+      var(--bg);
+  }
+  body {
+    margin: 0 auto;
+    max-width: 96rem;
+    padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
+    font: clamp(0.875rem, 0.8rem + 0.35vw, 1rem) / 1.65 var(--font-mono), monospace;
+    color: var(--fg);
+    background: transparent;
+    overflow-wrap: anywhere;
+  }
+  :root[data-theme='retro'] {
     --bg: #1c1819;
     --card: #25201f;
     --line: #3d3533;
@@ -67,32 +130,59 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
     --accent: #c46bf5;
     --link: #deb4e6;
     --ok: #e3ef5b;
-    --glow-accent: 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
-    --glow-ok: 0 0 3px color-mix(in srgb, var(--ok) 30%, transparent);
-  }
-  * { box-sizing: border-box; }
-  html { background: var(--bg); font-size: clamp(100%, 0.6rem + 0.45vw, 125%); }
-  body {
-    margin: 0 auto;
-    max-width: 96rem;
-    padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
-    font: clamp(0.875rem, 0.8rem + 0.35vw, 1rem) / 1.65 var(--font-mono), monospace;
-    color: var(--fg);
     background: var(--bg);
-    overflow-wrap: anywhere;
   }
-  body::after {
+  :root[data-theme='retro'] body::after {
     content: '';
     position: fixed;
     inset: 0;
+    z-index: 2;
     pointer-events: none;
     background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px);
   }
   ::selection { background: var(--accent); color: var(--bg); }
+  #intro h1 {
+    display: inline-block;
+    background: linear-gradient(90deg, #c084fc, #bef264);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  :root[data-theme='retro'] #intro h1 { background: none; color: var(--fg); }
+  .corner {
+    position: fixed;
+    top: clamp(0.75rem, 2vw, 1.25rem);
+    right: clamp(0.75rem, 2vw, 1.25rem);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.25s, visibility 0.25s;
+  }
+  .intro .corner { opacity: 0; visibility: hidden; }
+  .to-shell, .retro-toggle {
+    border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--line));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--card) 85%, transparent);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--fg);
+    font-size: 0.9em;
+    transition: opacity 0.25s, transform 0.25s, visibility 0.25s, border-color 0.2s, box-shadow 0.2s, color 0.2s;
+  }
+  .to-shell, .retro-toggle { height: 2.6em; }
+  .to-shell { display: inline-flex; align-items: center; gap: 1ch; padding: 0 1rem; text-decoration: none; }
+  .to-shell::before { content: '> '; content: '> ' / ''; color: var(--accent); }
+  .to-shell:hover, .retro-toggle:hover { color: var(--fg); border-color: var(--accent); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent); text-decoration: none; }
+  .to-shell.away { opacity: 0; transform: translateY(-0.5rem); visibility: hidden; }
+  .retro-toggle { display: grid; place-items: center; aspect-ratio: 1; padding: 0; color: var(--muted); cursor: pointer; }
+  .retro-toggle[aria-pressed='true'] { color: var(--ok); }
+  .retro-toggle:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .corner, .to-shell, .retro-toggle { transition: none; } }
   p { max-width: 72ch; }
   a { color: var(--link); text-decoration: none; }
   a:hover { color: var(--ok); text-decoration: underline; }
-  a:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; border-radius: 2px; }
   img, video { max-width: 100%; height: auto; }
   pre { overflow-x: auto; }
 
@@ -124,6 +214,7 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
   .card {
     background: var(--card);
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     padding: 1.1rem 1.25rem;
     transition: border-color 0.2s;
   }
@@ -142,11 +233,46 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
   }
 
   .intro:not(.typing) #intro { visibility: hidden; }
-  .intro main > :not(#intro), .intro footer { opacity: 0; }
+  .intro main > :not(#intro), .intro footer { opacity: 0; pointer-events: none; }
   main > *, footer { transition: opacity 0.6s ease; }
-  .untyped, .untyped * { color: transparent !important; text-shadow: none !important; }
+  .untyped, .untyped * { visibility: hidden; }
   .typing .links a:has(.untyped:not(:empty))::before,
   .typing .links a:has(.untyped:not(:empty))::after { color: transparent; }
+  #intro { position: relative; z-index: 0; }
+  #intro::before, #intro::after {
+    position: absolute;
+    top: -3.4rem;
+    left: -1.75rem;
+    width: var(--stage-frame, 0px);
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #intro::before {
+    content: '';
+    z-index: -1;
+    bottom: -1.5rem;
+    background: color-mix(in srgb, var(--bg) 70%, #000);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  #intro::after {
+    content: '~/neelesh  \00b7  click or press a key to skip';
+    content: '~/neelesh  \00b7  click or press a key to skip' / '';
+    height: 2.1rem;
+    padding: 0 1rem;
+    line-height: 2.1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 0.8em;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  #intro.stage { width: calc(var(--stage-w) + 2px); }
+  #intro.stage::before, #intro.stage::after { opacity: 1; }
 
   @media (prefers-reduced-motion: no-preference) {
     :root:not(.typing) .cursor { animation: blink 1.1s steps(1) infinite; }
@@ -159,5 +285,4 @@ const canonical = Astro.site && new URL(Astro.url.pathname, Astro.site).href;
   }
   @keyframes blink { 50% { opacity: 0; } }
   @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
-  @media print { body::after { display: none; } }
 </style>

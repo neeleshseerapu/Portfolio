@@ -55,7 +55,6 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
     <button type="button" data-run="ls">ls</button>
   </p>
 </section>
-<a href="#contact" class="to-shell">message me</a>
 <script type="application/json" id="shell-data" set:html={shellData} />
 
 <script>
@@ -323,28 +322,10 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
 
 <style>
   [hidden] { display: none !important; }
-  .to-shell {
-    position: fixed;
-    top: clamp(0.75rem, 2vw, 1.25rem);
-    right: clamp(0.75rem, 2vw, 1.25rem);
-    z-index: 1;
-    padding: 0.45rem 1rem;
-    border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--line));
-    background: color-mix(in srgb, var(--card) 85%, transparent);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 22%, transparent);
-    color: var(--fg);
-    font-size: 0.9em;
-    text-decoration: none;
-    transition: opacity 0.25s, transform 0.25s, visibility 0.25s, border-color 0.2s, box-shadow 0.2s;
-  }
-  .to-shell::before { content: '> '; content: '> ' / ''; color: var(--accent); }
-  .to-shell:hover { color: var(--fg); border-color: var(--accent); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent); text-decoration: none; }
-  .to-shell.away, :global(.intro) .to-shell { opacity: 0; transform: translateY(-0.5rem); visibility: hidden; }
-  @media (prefers-reduced-motion: reduce) { .to-shell { transition: none; } }
   .shell { scroll-margin-bottom: clamp(1.5rem, 5vw, 4rem); }
   .window {
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     background: color-mix(in srgb, var(--bg) 70%, #000);
     overflow: hidden;
     transition: border-color 0.2s;
@@ -404,7 +385,7 @@ const shellData = JSON.stringify({ tagline: site.tagline, links: site.links, pro
   button::before { content: '['; content: '[' / ''; }
   button::after { content: ']'; content: ']' / ''; }
   button:hover { color: var(--ok); text-decoration: underline; }
-  button:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+  button:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; border-radius: 2px; }
   .chips, .actions { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; align-items: baseline; }
   .error { color: var(--ok); }
   .error:empty { display: none; }

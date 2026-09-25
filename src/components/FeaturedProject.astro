@@ -22,7 +22,7 @@ const local = videoUrl?.startsWith('/');
 
 <style>
   .feature-wrap { container-type: inline-size; display: flex; flex-direction: column; flex: 1; }
-  .feature-wrap > :global(.card) { flex: 1; font-size: 1.05em; }
+  .feature-wrap > :global(.card) { flex: 1; }
   .feature-wrap + .feature-wrap { margin-top: 1rem; }
   .hero-logo { display: none; }
   @container (min-width: 40rem) {
@@ -43,14 +43,7 @@ const local = videoUrl?.startsWith('/');
     }
     .feature-wrap :global(.featured:has(.hero-logo) > *) { grid-column: 1 / -1; }
     .feature-wrap :global(.featured:has(.hero-logo) > .title) { grid-column: 2; grid-row: 1; align-self: end; }
-    .feature-wrap :global(.featured:has(.hero-logo) > .lede) {
-      grid-column: 2;
-      grid-row: 2;
-      align-self: start;
-      font-size: clamp(1em, 0.8em + 1cqi, 1.4em);
-      line-height: 1.45;
-      color: var(--fg);
-    }
+    .feature-wrap :global(.featured:has(.hero-logo) > .lede) { grid-column: 2; grid-row: 2; align-self: start; }
     .feature-wrap :global(.featured:has(.hero-logo) > .title img) { display: none; }
     .feature-wrap :global(.featured:has(.hero-logo) > .lede + *) { margin-top: 1rem; }
   }
