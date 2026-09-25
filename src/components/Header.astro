@@ -4,21 +4,22 @@ import { lines } from '@/lib/content';
 import ContactLinks from './ContactLinks.astro';
 ---
 <header id="intro">
-  <p class="prompt" aria-hidden="true"><span data-type="70">whoami</span></p>
-  <h1 data-type="40">{site.name}</h1>
-  <p class="tagline lines" data-type="6">{lines(site.tagline)}</p>
-  <nav aria-label="Contact" data-type="15"><ContactLinks /></nav>
+  <p class="prompt" aria-hidden="true"><span data-type="130">whoami</span></p>
+  <h1 data-type="55">{site.name}</h1>
+  <p class="tagline lines" data-type="22">{lines(site.tagline)}</p>
+  <nav aria-label="Contact" data-type="30"><ContactLinks /></nav>
 </header>
 
 <script is:inline>
   (() => {
     const root = document.documentElement;
     if (!root.classList.contains('intro')) return;
-    let done = false;
-    const jobs = [];
+    const header = document.getElementById('intro');
     const cursor = document.createElement('span');
     cursor.className = 'cursor';
     cursor.setAttribute('aria-hidden', 'true');
+    const jobs = [];
+    let done = false;
 
     const finish = () => {
       if (done) return;
@@ -29,11 +30,14 @@ import ContactLinks from './ContactLinks.astro';
         j.typed.remove();
       }
       cursor.remove();
+      header.classList.remove('stage');
+      header.style.transition = '';
+      header.style.transform = '';
       root.classList.remove('intro', 'typing');
     };
 
     try {
-      for (const el of document.querySelectorAll('#intro [data-type]')) {
+      for (const el of header.querySelectorAll('[data-type]')) {
         const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
         const nodes = [];
         while (walker.nextNode()) if (walker.currentNode.data.trim()) nodes.push(walker.currentNode);
@@ -47,6 +51,33 @@ import ContactLinks from './ContactLinks.astro';
           jobs.push({ el, node, typed, rest, text: node.data, delay: Number(el.dataset.type) });
         }
       }
+
+      const box = header.getBoundingClientRect();
+      const range = document.createRange();
+      const walker = document.createTreeWalker(header, NodeFilter.SHOW_TEXT);
+      let right = box.left;
+      while (walker.nextNode()) {
+        if (!walker.currentNode.data.trim()) continue;
+        range.selectNodeContents(walker.currentNode);
+        for (const r of range.getClientRects()) right = Math.max(right, r.right);
+      }
+      for (const a of header.querySelectorAll('a')) right = Math.max(right, a.getBoundingClientRect().right);
+      const contentWidth = right - box.left;
+      const rem = parseFloat(getComputedStyle(root).fontSize);
+      const padX = 1.75 * rem;
+      const maxWindow = innerWidth - 32;
+      const scale = Math.min(1.4, maxWindow / (contentWidth + 2 * padX));
+      const windowW = Math.min(maxWindow, Math.max((contentWidth + 2 * padX) * scale, innerWidth * 0.75));
+      const windowH = (box.height + 4.9 * rem) * scale;
+      const windowLeft = (innerWidth - windowW) / 2;
+      const windowTop = Math.max(16, innerHeight * 0.46 - windowH / 2);
+      const textLeft = windowLeft + padX * scale;
+      const textTop = windowTop + 3.4 * rem * scale;
+      header.style.setProperty('--stage-w', `${contentWidth}px`);
+      header.style.setProperty('--stage-frame', `${windowW / scale}px`);
+      header.style.transformOrigin = '0 0';
+      header.style.transform = `translate(${textLeft - box.left}px, ${textTop - box.top}px) scale(${scale})`;
+      header.classList.add('stage');
       root.classList.add('typing');
     } catch {
       finish();
@@ -54,22 +85,34 @@ import ContactLinks from './ContactLinks.astro';
     }
 
     addEventListener('keydown', finish, { once: true });
-    addEventListener('pointerdown', finish, { once: true });
-    setTimeout(finish, 8000);
+    addEventListener('pointerdown', () => {
+      if (done) return;
+      finish();
+      addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); }, { capture: true, once: true });
+    }, { once: true });
+    setTimeout(finish, 25000);
 
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     (async () => {
-      await sleep(300);
+      await sleep(700);
       for (const [i, j] of jobs.entries()) {
         j.rest.before(cursor);
         for (let n = 1; n <= j.text.length; n++) {
           if (done) return;
           j.typed.data = j.text.slice(0, n);
           j.node.data = j.text.slice(n);
-          await sleep(j.delay);
+          await sleep(i === 0 ? j.delay + Math.random() * 70 : j.delay);
         }
-        if (jobs[i + 1]?.el !== j.el) await sleep(i === 0 ? 350 : 150);
+        j.rest.closest('a')?.after(cursor);
+        if (jobs[i + 1]?.el !== j.el) await sleep(i === 0 ? 650 : 280);
       }
+      await sleep(1600);
+      if (done) return;
+      cursor.remove();
+      header.classList.remove('stage');
+      header.style.transition = 'transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1)';
+      header.style.transform = '';
+      await sleep(900);
       finish();
     })().catch(finish);
   })();

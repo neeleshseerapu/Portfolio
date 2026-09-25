@@ -60,7 +60,7 @@ const links = [
   .title { display: flex; align-items: center; gap: 0.6rem; }
   .title img { height: 1.25em; width: auto; flex: none; }
   .featured .title img { height: 2.25em; }
-  .title h1, .title h3 { margin: 0; color: var(--accent); text-shadow: var(--glow-accent); }
+  .title h1, .title h3 { margin: 0; font-size: 1.1em; line-height: 1.3; color: var(--accent); text-shadow: var(--glow-accent); }
   .title a { color: inherit; }
   .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 0.75rem 2rem; margin: 0.9rem 0; }
   .notes .label { margin: 0 0 0.25rem; color: var(--accent); font-weight: 700; }
@@ -68,7 +68,7 @@ const links = [
   .notes li { padding-left: 2ch; text-indent: -2ch; margin: 0.2rem 0; }
   .notes li::before { content: '- '; content: '- ' / ''; color: var(--muted); }
   .card { position: relative; }
-  .title a::after { content: ''; position: absolute; inset: 0; }
+  .title a::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
   .title a:focus-visible { outline: none; }
   .card:has(.title a:focus-visible) { outline: 2px solid var(--ok); outline-offset: 3px; }
   .links a, .card :global(.media), .more-toggle { position: relative; z-index: 1; }
@@ -76,15 +76,14 @@ const links = [
   .more-toggle::before { content: '['; content: '[' / ''; }
   .more-toggle::after { content: ']'; content: ']' / ''; }
   .more-toggle:hover { color: var(--ok); text-decoration: underline; }
-  .more-toggle:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+  .more-toggle:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; border-radius: 2px; }
   @media (orientation: portrait) {
     :global(.js) .more:not(.expanded) .notes { display: none; }
     :global(.js) .more-toggle { display: inline; }
   }
   .featured { padding: clamp(1.25rem, 3vw, 2rem); }
-  .featured .title h3 { font-size: 1.4em; }
   .featured .title h3::before { content: '> '; content: '> ' / ''; }
-  .featured :global(.media) { display: block; margin: 1rem 0; border: 1px solid var(--line); }
+  .featured :global(.media) { display: block; margin: 1rem 0; border-radius: 6px; border: 1px solid var(--line); }
   @container (min-width: 50rem) {
     .featured:has(:global(.media)) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); column-gap: 2rem; align-content: start; }
     .featured :global(.media) { grid-column: 2; grid-row: 1 / span 6; margin: 0; }
