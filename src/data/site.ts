@@ -6,7 +6,7 @@ export const site = {
   school: 'University of California, Los Angeles',
   domain: 'https://portfolio-nsos.vercel.app',
   links: {
-    resume: '/resume.pdf',
+    resume: '',
     github: 'https://github.com/neeleshseerapu',
     linkedin: 'https://www.linkedin.com/in/nseerapu/',
     email: 'nseerapu@ucla.edu',
